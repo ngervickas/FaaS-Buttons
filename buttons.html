@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<title> FaaS Buttons</title>
+		
+		<link rel="icon" type="image/gif" href="/portal/static/images/favicon.ico">
+		<!-- CSS -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+		<!-- CSS END -->
+		<style>
+		h1 {
+			text-align:center;
+		}
+		div {
+			text-align:center;
+		}
+		
+	
+		</style>
+	</head>
+	<body>
+		<h1> FaaS Buttons </h1>
+			<div>
+				<select onChange="window.location.href=this.value">
+					<option selected disabled> Alcohol </option>
+				{% for button in value: %}
+					{% if "Check-in" not in button['name'] and "Table" not in button['name']: %}
+					<option value="/button/{{button['mac']}}"+{{ button['mac']}}>{{button['name']}}</option>
+					{% endif %}
+				{% endfor %}
+				</select>
+			</div>
+			<div>
+				<select onChange="window.location.href=this.value">
+					<option selected disabled> Check In </option>
+				{% for button in value: %}
+					{% if "Check-in" in button['name']: %}
+					<option value="/button/{{button['mac']}}"+{{ button['mac'] }}>{{button['name']}}</option>
+					{% endif %}
+				{% endfor %}
+				</select>
+			<div>
+				<select onChange="window.location.href=this.value">
+					<option selected disabled> Tables </option>
+					{% for button in value: %}
+						{% if "Table" in button['name']: %}
+						<option value="/button/{{button['mac']}}"+{{ button['mac'] }}>{{button['name']}}</option>
+						{% endif %}
+					{% endfor %}
+			</div>				
+	</body>
+</html>
+
