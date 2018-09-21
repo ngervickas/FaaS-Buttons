@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Button Stats</title>
+		<link rel="icon" type="image/gif" href="/portal/static/images/favicon.ico">
+		<!-- CSS -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+		<!-- CSS END --> 
+		<style>
+		h1 {
+			text-align:center;
+		}
+		h2 {
+			text-align:center;
+		}
+		div {
+			text-align:center;
+			overflow:scroll;			
+		}
+
+		.axis path,
+		.axis line {
+  		fill: none;
+  		stroke: #000;
+  		shape-rendering: crispEdges;
+		}
+
+		.bar {
+  		fill: greenyellow;
+		}
+
+		.bar:hover {
+  		fill: green ;
+		}
+
+		.x.axis path {
+  		display: none;
+		}
+
+		.d3-tip {
+  		line-height: 1;
+  		font-weight: bold;
+  		padding: 14px;
+  		background: rgba(0, 0, 0, 0.8);
+  		color: #fff;
+  		border-radius: 2px;
+		}
+
+		/* Creates a small triangle extender for the tooltip */
+		.d3-tip:after {
+  		box-sizing: border-box;
+  		display: inline;
+  		font-size: 10px;
+  		width: 100%;
+  		line-height: 1;
+  		color: rgba(0, 0, 0, 0.8);
+  		content: "\25BC";
+  		position: absolute;
+  		text-align: center;
+		}
+
+		/* Style northward tooltips differently */
+		.d3-tip.n:after {
+  		margin: -1px 0 0 0;
+  		top: 100%;
+  		left: 0;
+		}
+		
+		.line {
+  		fill: none;
+  		stroke: #444;
+  		stroke-width: 1.5px;
+  		}
+		</style>	
+	</head>
+	<body>
+	<h1>Button Stats</h1>
+	<h2>Name: {{value['name']}}</h2>
+	<div>Total Clicks: {{value['clicks']}}</div>
+	<div>Clicks Per Hour: {{value['avg_cph']}}</div>
+	<div id = "graph-div"></div>
+	
+	<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+	<script type="text/javascript" src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+		<script type="text/javascript">
+		var margin = {top: 40, right: 20, bottom: 30, left: 40},
+   	 		width = 960 - margin.left - margin.right,
+    		height = 500 - margin.top - margin.bottom;
+    
+		var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
+			y = d3.scale.linear().range([height, 0]);
+    		x2 = d3.scale.ordinal().rangeBands([0, width], 0);
+
+		var xAxis = d3.svg.axis()
+    		.scale(x)
+    		.orient("bottom");
+
+		var yAxis = d3.svg.axis()
+    		.scale(y)
+    		.orient("left");
+    		
+    	var tip = d3.tip()
+  			.attr('class', 'd3-tip')
+  			.offset([-10, 0])
+  			.html(function(d) { return "<strong>Clicks:</strong> <span style='color:green'>" + d.clicks + "</span>" +
+  			"<div style='text-align:left'><strong>Time: </strong><span style='color:green'>" + d.timestamp + "</span></div>";})
+  			
+    	
+
+		var svg = d3.select("#graph-div").append("svg")
+   			.attr("width", width + margin.left + margin.right)
+    		.attr("height", height + margin.top + margin.bottom).append("g")
+    		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    	
+    	svg.call(tip);
+    
+
+		var data = JSON.parse('{{value2|safe}}');
+		data.forEach(function(d){
+ 			d.timestamp = moment(d.timestamp).format('HH:mm'); });
+	
+		x.domain(data.map(function(d) { return d.timestamp; }));
+  		x2.domain(data.map(function(d) { return d.timestamp; }));
+  		y.domain([0, d3.max(data, function(d) { return d.clicks; })]);
+  		
+		svg.append("g")
+      		.attr("class", "x axis")
+      		.attr("transform", "translate(0," + height + ")");
+      		
+		svg.append("g")
+      		.attr("class", "y axis")
+      		.call(yAxis);
+
+  		svg.selectAll(".bar")
+    		.data(data)
+    		.enter().append("rect")
+      		.attr("class", "bar")
+      		.attr("x", function(d) { return x(d.timestamp); })
+      		.attr("width", x.rangeBand())
+      		.attr("y", function(d) { return y(d.clicks); })
+      		.attr("height", function(d) { return height - y(d.clicks); })
+      		.on('mouseover', tip.show)
+      		.on('mouseout', tip.hide)
+      		
+      var dataSum = d3.sum(data, function(d) { return d.clicks; });
+      var dataAvg = Math.round(dataSum/data.length)
+      	
+      	var line = d3.svg.line()
+      		.x(function(d, i) {
+      		return x2(d.timestamp) + i; })
+      		.y(function(d) { return y(d.clicks); });
+      	
+      	var line2 = d3.svg.line()
+      		.x(function(d, i) {
+      		return x2(d.timestamp) + i; })
+      		.y(function(d, i) {return y(dataAvg); });
+      	
+      	var tip2 = d3.tip()
+  		.attr('class', 'd3-tip')
+  		.offset([-10, 0])
+  		.html(function(d) { return "<strong>Average Clicks:</strong> <span style='color:green'>" + dataAvg + "</span>";})
+    	
+      		
+      	svg.call(tip2);
+
+      	
+      	svg.append("path")
+      		.datum(data)
+      		.attr("class", "line")
+      		.attr("d", line);
+      		
+      	svg.append("path")
+      		.datum(data)
+      		.attr("class", "line")
+      		.attr("d", line2)
+      		.on('mouseover', tip2.show)
+      		.on('mouseout', tip2.hide);
+     
+      	function type(d) {
+  			d.clicks = +d.clicks;
+  			return d;
+  		}
+    	</script>
+	</body>
+</html>
+		
